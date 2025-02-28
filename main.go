@@ -22,8 +22,15 @@ func extractAudio(videoPath, audioPath string) error {
 }
 
 func diarizeAudio(audioPath string) (string, error) {
-	// Run Pyannote.audio diarization script (we'll create this next)
+	// Get HF_TOKEN from the environment
+	hfToken := os.Getenv("HF_TOKEN")
+	if hfToken == "" {
+		return "", fmt.Errorf("HF_TOKEN environment variable not set")
+	}
+
+	// Run diarize.py with HF_TOKEN as an environment variable
 	cmd := exec.Command("python3", "diarize.py", audioPath)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("HF_TOKEN=%s", hfToken)) // Pass HF_TOKEN to Python
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("diarization failed: %v, output: %s", err, output)
@@ -32,7 +39,7 @@ func diarizeAudio(audioPath string) (string, error) {
 }
 
 func transcribeAudio(audioPath, outputFile string) error {
-	cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
+	cmd := exec.Command("./whisper-cli", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -96,14 +103,10 @@ func main() {
 	os.Remove(transcriptPath)
 }
 
-// Simple function to combine diarization and transcription (basic example)
 func combineDiarizationAndTranscription(diarization, transcription string) {
-	// For simplicity, assume diarization output is "START_TIME END_TIME SPEAKER"
-	// and transcription is plain text. In practice, you'd need to align timestamps.
 	diarizationLines := strings.Split(diarization, "\n")
 	transcriptionLines := strings.Split(transcription, "\n")
 
-	// Basic alignment (assumes one-to-one line correspondence for demo)
 	for i, dLine := range diarizationLines {
 		if i < len(transcriptionLines) && dLine != "" {
 			parts := strings.Fields(dLine)

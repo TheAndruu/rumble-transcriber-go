@@ -10,9 +10,6 @@ RUN go mod init rumble-transcriber && \
 # Final stage
 FROM ubuntu:22.04
 
-ARG HF_TOKEN
-ENV HF_TOKEN=$HF_TOKEN
-
 WORKDIR /app
 
 # Install dependencies: ffmpeg, yt-dlp, git, build-essential, curl, cmake, Python, and pip
@@ -34,11 +31,11 @@ RUN git clone https://github.com/ggerganov/whisper.cpp.git && \
     mv build/bin/whisper-cli /app/whisper && \
     cd /app
 
-# Install Pyannote.audio and PyTorch (required for Pyannote)
+# Install Pyannote.audio, PyTorch, and huggingface_hub
 RUN pip3 install pyannote.audio torch huggingface_hub
 
-# Log in to Hugging Face (replace with your token)
-RUN huggingface-cli login --token "$HF_TOKEN"
+# Copy the diarization script
+COPY diarize.py /app/diarize.py
 
 # Download a Whisper model (base English model)
 RUN curl -L -o ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
@@ -48,9 +45,6 @@ COPY --from=builder /app/transcriber /app/transcriber
 
 # Set executable permissions
 RUN chmod +x /app/transcriber /app/whisper
-
-# Copy the diarization script
-COPY diarize.py /app/diarize.py
 
 # Command to run the transcriber
 ENTRYPOINT ["/app/transcriber"]
