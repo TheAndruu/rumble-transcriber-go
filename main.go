@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func downloadRumbleVideo(url, outputPath string) error {
@@ -20,9 +21,18 @@ func extractAudio(videoPath, audioPath string) error {
 	return cmd.Run()
 }
 
-func transcribeAudio(audioPath, outputTextPath string) error {
-	// Assuming whisper.cpp main binary is available as 'whisper'
-	cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt")
+func diarizeAudio(audioPath string) (string, error) {
+	// Run Pyannote.audio diarization script (we'll create this next)
+	cmd := exec.Command("python3", "diarize.py", audioPath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("diarization failed: %v, output: %s", err, output)
+	}
+	return string(output), nil
+}
+
+func transcribeAudio(audioPath, outputFile string) error {
+	cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -37,7 +47,7 @@ func main() {
 	rumbleURL := os.Args[1]
 	videoFile := "video.mp4"
 	audioFile := "audio.mp3"
-	transcriptFile := "audio.txt" // whisper.cpp outputs to <audio>.txt by default
+	transcriptFile := "transcription"
 
 	// Step 1: Download the video
 	fmt.Println("Downloading video from Rumble...")
@@ -53,24 +63,54 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Step 3: Transcribe audio
+	// Step 3: Diarize audio to identify speakers
+	fmt.Println("Diarizing audio...")
+	diarizationOutput, err := diarizeAudio(audioFile)
+	if err != nil {
+		fmt.Printf("Error diarizing audio: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Step 4: Transcribe audio
 	fmt.Println("Transcribing audio...")
 	if err := transcribeAudio(audioFile, transcriptFile); err != nil {
 		fmt.Printf("Error transcribing audio: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Step 4: Read and display the transcription
-	transcription, err := os.ReadFile(transcriptFile)
+	// Step 5: Read transcription
+	transcriptPath := transcriptFile + ".txt"
+	transcription, err := os.ReadFile(transcriptPath)
 	if err != nil {
 		fmt.Printf("Error reading transcription: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("\nTranscription:")
-	fmt.Println(string(transcription))
+
+	// Step 6: Combine diarization and transcription
+	fmt.Println("\nTranscription with Speakers:")
+	combineDiarizationAndTranscription(diarizationOutput, string(transcription))
 
 	// Clean up
 	os.Remove(videoFile)
 	os.Remove(audioFile)
-	os.Remove(transcriptFile)
+	os.Remove(transcriptPath)
+}
+
+// Simple function to combine diarization and transcription (basic example)
+func combineDiarizationAndTranscription(diarization, transcription string) {
+	// For simplicity, assume diarization output is "START_TIME END_TIME SPEAKER"
+	// and transcription is plain text. In practice, you'd need to align timestamps.
+	diarizationLines := strings.Split(diarization, "\n")
+	transcriptionLines := strings.Split(transcription, "\n")
+
+	// Basic alignment (assumes one-to-one line correspondence for demo)
+	for i, dLine := range diarizationLines {
+		if i < len(transcriptionLines) && dLine != "" {
+			parts := strings.Fields(dLine)
+			if len(parts) >= 3 {
+				speaker := parts[2]
+				fmt.Printf("%s: %s\n", speaker, transcriptionLines[i])
+			}
+		}
+	}
 }
