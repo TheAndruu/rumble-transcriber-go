@@ -39,7 +39,7 @@ func diarizeAudio(audioPath string) (string, error) {
 }
 
 func transcribeAudio(audioPath, outputFile string) error {
-	cmd := exec.Command("./whisper-cli", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
+	cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

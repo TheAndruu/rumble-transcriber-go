@@ -14,7 +14,7 @@
     # On host machine (your laptop)
     export HF_TOKEN=<access token from hugging face>
 
-    docker run --rm -e HF_TOKEN="$HF_TOKEN" rumble-transcriber "https://rumble.com/v5cweph-kamala-harris-finally-gives-softball-interview-and-its-still-a-total-disast.html"
+    docker run --rm rumble-transcriber "https://rumble.com/v5cweph-kamala-harris-finally-gives-softball-interview-and-its-still-a-total-disast.html"
 
 
 ## To access the docker container while its running
