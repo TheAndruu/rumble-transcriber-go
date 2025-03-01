@@ -41,11 +41,13 @@ RUN pip3 install pyannote.audio torch huggingface_hub
 # Download the diarization models
 RUN --mount=type=secret,id=hf_token \
     export HF_TOKEN=$(cat /run/secrets/hf_token) && \
+    mkdir -p /root/.cache/huggingface/hub && \
     huggingface-cli login --token "$HF_TOKEN" && \
-    huggingface-cli download pyannote/speaker-diarization-3.1 && \
-    huggingface-cli download pyannote/segmentation-3.0 && \
+    python3 -c "from pyannote.audio import Pipeline; Pipeline.from_pretrained('pyannote/speaker-diarization-3.1')" && \
+    python3 -c "from pyannote.audio import Model; Model.from_pretrained('pyannote/segmentation-3.0')" && \
     unset HF_TOKEN && \
     huggingface-cli logout
+
 
 #Download a Whisper model (base English model)
 RUN curl -L -o ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin

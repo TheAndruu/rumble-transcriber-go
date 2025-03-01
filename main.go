@@ -22,29 +22,21 @@ func extractAudio(videoPath, audioPath string) error {
 }
 
 func diarizeAudio(audioPath string) (string, error) {
-	// Get HF_TOKEN from the environment
-	hfToken := os.Getenv("HF_TOKEN")
-	if hfToken == "" {
-		return "", fmt.Errorf("HF_TOKEN environment variable not set")
-	}
-
-	// Run diarize.py with HF_TOKEN as an environment variable
-	cmd := exec.Command("python3", "diarize.py", audioPath)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("HF_TOKEN=%s", hfToken)) // Pass HF_TOKEN to Python
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("diarization failed: %v, output: %s", err, output)
-	}
-	return string(output), nil
+    cmd := exec.Command("python3", "diarize.py", audioPath)
+    output, err := cmd.CombinedOutput()
+    if err != nil {
+        return "", fmt.Errorf("diarization failed: %v, output: %s", err, output)
+    }
+	fmt.Println("Diarization output:\n", string(output)) // Debug print
+    return string(output), nil
 }
 
 func transcribeAudio(audioPath, outputFile string) error {
-	cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+    cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile, "-t")
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    return cmd.Run()
 }
-
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage: go run main.go <rumble_video_url>")
