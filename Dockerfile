@@ -10,8 +10,8 @@ RUN go mod init rumble-transcriber && \
 # Final stage
 FROM ubuntu:22.04
 
-ARG HF_TOKEN
-ENV HF_TOKEN=$HF_TOKEN
+# ARG HF_TOKEN
+# ENV HF_TOKEN=$HF_TOKEN
 
 WORKDIR /app
 
@@ -39,7 +39,9 @@ RUN pip3 install pyannote.audio torch huggingface_hub
 
 # Log in to Hugging Face (replace with your token) and
 # Download the diarization models
-RUN huggingface-cli login --token "$HF_TOKEN" && \
+RUN --mount=type=secret,id=hf_token \
+    export HF_TOKEN=$(cat /run/secrets/hf_token) && \
+    huggingface-cli login --token "$HF_TOKEN" && \
     huggingface-cli download pyannote/speaker-diarization-3.1 && \
     huggingface-cli download pyannote/segmentation-3.0 && \
     unset HF_TOKEN && \
