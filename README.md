@@ -11,7 +11,7 @@
 
 ## To run
 
-    docker run --rm rumble-transcriber "https://rumble.com/v2nehs7-discover-the-winning-mindset-of-michael-jordan-10-quotes-to-inspire-you-to-.html"
+    docker run --rm rumble-transcriber "https://rumble.com/v553v63-dana-bash.html"
 
 
 

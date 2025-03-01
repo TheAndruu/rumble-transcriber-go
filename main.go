@@ -27,16 +27,17 @@ func diarizeAudio(audioPath string) (string, error) {
     if err != nil {
         return "", fmt.Errorf("diarization failed: %v, output: %s", err, output)
     }
-	fmt.Println("Diarization output:\n", string(output)) // Debug print
+    fmt.Println("Diarization output:\n", string(output)) // Debug print
     return string(output), nil
 }
 
 func transcribeAudio(audioPath, outputFile string) error {
-    cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile, "-t")
+    cmd := exec.Command("./whisper", "-f", audioPath, "-m", "ggml-base.en.bin", "-otxt", "-of", outputFile)
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
     return cmd.Run()
 }
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage: go run main.go <rumble_video_url>")
@@ -84,6 +85,7 @@ func main() {
 		fmt.Printf("Error reading transcription: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Println("Transcription output:\n", string(transcription)) // Add debug print
 
 	// Step 6: Combine diarization and transcription
 	fmt.Println("\nTranscription with Speakers:")
@@ -96,16 +98,16 @@ func main() {
 }
 
 func combineDiarizationAndTranscription(diarization, transcription string) {
-	diarizationLines := strings.Split(diarization, "\n")
-	transcriptionLines := strings.Split(transcription, "\n")
+    diarizationLines := strings.Split(diarization, "\n")
+    transcriptionLines := strings.Split(transcription, "\n")
 
-	for i, dLine := range diarizationLines {
-		if i < len(transcriptionLines) && dLine != "" {
-			parts := strings.Fields(dLine)
-			if len(parts) >= 3 {
-				speaker := parts[2]
-				fmt.Printf("%s: %s\n", speaker, transcriptionLines[i])
-			}
-		}
-	}
+    for i, dLine := range diarizationLines {
+        if i < len(transcriptionLines) && dLine != "" {
+            parts := strings.Fields(dLine)
+            if len(parts) >= 3 {
+                speaker := parts[2] // e.g., "Speaker_00"
+                fmt.Printf("%s: %s\n", speaker, transcriptionLines[i])
+            }
+        }
+    }
 }
