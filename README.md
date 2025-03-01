@@ -25,4 +25,4 @@ Can then build the project with docker secrets:
 
 
 ## To access the docker container while its running
-    docker run -it --rm -e HF_TOKEN="$HF_TOKEN" --entrypoint /bin/bash rumble-transcriber
+    docker run -it --rm --entrypoint /bin/bash rumble-transcriber
