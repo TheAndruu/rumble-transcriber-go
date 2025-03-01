@@ -7,8 +7,6 @@ def diarize(audio_file):
     # Load pipeline from the default cache (pre-downloaded)
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
     pipeline.to(torch.device("cpu"))
-    # device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    # pipeline.to(device)
     diarization = pipeline(audio_file)
     for turn, _, speaker in diarization.itertracks(yield_label=True):
         # Clean up speaker label from "SPEAKER_00" to "0"
