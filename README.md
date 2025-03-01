@@ -21,7 +21,7 @@ Can then build the project with docker secrets:
 
 ## To run
 
-    docker run --rm rumble-transcriber "https://rumble.com/v5cweph-kamala-harris-finally-gives-softball-interview-and-its-still-a-total-disast.html"
+     docker run --rm rumble-transcriber https://rumble.com/v3fdiz4-portnoy-carlson.html
 
 
 ## To access the docker container while its running
